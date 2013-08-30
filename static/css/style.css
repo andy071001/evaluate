@@ -1,0 +1,89 @@
+body{
+	font-size:12px;
+
+	font-family: Arial, Helvetica, Verdana, sans-serif;
+	margin:0 auto;
+	padding:0 0 3em 0;
+	position:relative;
+	color:#444;
+	text-align:center;
+	word-break: break-all;
+}
+
+
+
+form{
+	padding:0;
+	margin:0;
+}
+
+
+
+
+.sign_body{
+	background:#4c535b;
+	text-align:center;
+	width:100%;
+}
+
+.sign_top{
+	width:100%;
+	background:#fff;
+	height:500px;
+	text-align:center;
+}
+.sign_blk{
+	width:480px;
+	padding:160px;
+	text-align:left;
+}
+
+.sign_logo{
+	height:160px;
+	width:200px;
+	border-right:1px solid #ccc;
+	
+}
+.sign_logo p{
+	margin:5px 0 0 13px;
+}
+
+.sign_form{
+	height:160px;
+	width:260px;
+	line-height:26px;
+	float:right;
+}
+
+.logform{
+	width:180px;
+	height:16px;
+	margin-top:2px;
+}
+
+h2{
+	font-size:16px;
+	color:#D01F3C;
+	margin:0 0 2px 0;
+	font-family: Arial;
+	padding:0;
+}
+
+
+#reg_txt{
+	width:270px;
+	margin:40px 0 0 20px;
+	height:300px;
+	float:left;
+}
+
+#reg_form{
+	float:right;
+	margin:40px 0 0 0px;
+	width:400px;
+	height:370px;
+}
+
+
+.gray{ color:#333;}
+.underline { text-decoration:none;}

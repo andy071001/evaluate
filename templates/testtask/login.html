@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="GBK">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=GBK">
+<title>	用户登录</title>
+<link rel="stylesheet" type="text/css" media="screen" href="{{ STATIC_URL }}/css/style.css">
+
+</head>
+<BODY class="sign_body">
+<div class="sign_top">
+<div class="sign_blk">
+ <form action="/testtask/login" method="post" >
+    {% csrf_token %}
+	<div class="sign_form">
+        <h2>登录到测试平台</h2>
+	用户名：　　<input type="text" class="logform" name="name" value=""><br />
+	密　码：　　<input type="password" class="logform" name="password"><br />
+
+	验证码：　　<input type="text" class="logform" name="verify_code" style="width:119px"> <script> document.write("<input type=text style='width:45px;padding:2px 5px;letter-spacing:3px;background:#ddd;font-size:14px;font-weight:bold;border:1px solid #bbb;color:#666' value=''>");</script><br />
+
+	<input type="submit" value="Login" name="B12" style="margin: 5px 0 0 140px; border:1px solid #aaa;;background-color: #ddd; font-family: Arial; font-size: 12px; font-weight: bold; width:70px">
+	</div>
+	<input type=hidden name=mpc value=>
+ </form>	
+
+	</div>
+</div>
+
+</body>
+</html>
