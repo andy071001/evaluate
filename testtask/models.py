@@ -4,13 +4,12 @@ from django.contrib.auth.models import User
 
 # Create your models here.
 class Task(models.Model):
-    user = models.ForeignKey(User)
-    name = models.IntegerField()
-    creator = models.CharField(max_length=30)
+    name = models.CharField(max_length=100)
+    creator = models.ForeignKey(User)
     create_time = models.DateTimeField(max_length=50)
-    number = models.IntegerField()
+    number = models.IntegerField(default=0)
     complete = models.IntegerField(default=0)
-    state = models.BooleanField()
+    state = models.BooleanField(default=False)
     type = models.IntegerField()
 
 
@@ -24,8 +23,8 @@ class QueryItem(models.Model):
     queryword = models.ForeignKey(QueryWord)
     title = models.CharField(max_length=1000)
     href = models.CharField(max_length=2048)
-    rating = models.IntegerField()
-    reason =  models.IntegerField()  # bit位表示选项
-    note = models.CharField(max_length=100)
+    rating = models.IntegerField(blank=True, null=True)
+    reason =  models.IntegerField(blank=True, null=True)  # bit位表示选项
+    note = models.CharField(max_length=100, blank=True, null=True)
     is_business = models.BooleanField(default=False)
     is_free = models.BooleanField(default=False)

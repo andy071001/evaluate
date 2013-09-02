@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="GBK">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=GBK">
+<title>	相关性评估页 </title>
+</head>
+<body>
+    <table name="left-list">
+        <tr>
+            <th> queyr列表 </th>
+        </tr>
+        {% for item in query_word_list %} 
+            <tr>
+                <td>{{ item.query_text }}</td>
+            </tr>
+        {% endfor %}
+
+        {% if is_paginated %}
+        <div>
+            <tr>
+            <td>
+            {% if page_obj.has_previous %}
+            <a href="/testtask/get_query_word?page={{ page_obj.previous_page_number }}" data-page="{{ page_obj.previous_page_number }}">上页</a>
+            {% endif %}
+                {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+            {% if page_obj.has_next %}
+            <a href="/testtask/get_query_word?page={{ page_obj.next_page_number }}" data-page="{{ page_obj.next_page_number }}">下页</a>
+            {% endif %}
+            </td>
+            </tr>
+        </div>
+        {% endif %}
+    </table>
+
+    <table name="middle-list">
+        <tr>
+            <th> 马可波罗 </th>
+        </tr>
+        {% for item in makepolo_query_item %}
+        {{ item.title }}
+        {{ item.href }}
+        {% endfor %}
+    </table>
+</body>
+</html>

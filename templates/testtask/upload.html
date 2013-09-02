@@ -7,9 +7,31 @@
 <body>
     <form enctype="multipart/form-data" method="POST" action="/testtask/upload/">
         {% csrf_token %}
-        <input type="file" name="file" /><br />
-        <input type="submit" value="Upload" name="hehe" />
-
+        <table>
+            <tr>
+                <td>任务名称</td>
+                <td><input type="text" name="name" /></td>
+            </tr>
+            <tr>
+                <td>任务类型</td>
+                <td>
+                    <select name="type">
+                        <option value="1">相关性对比评估</option>
+                        <option value="2">数据质量评估</option>
+                        <option value="3">策略GSB评估</option>
+                        <option value="4">其他</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td></td>
+                <td><input type="file" name="file" /></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td><input type="submit" value="Upload" name="hehe" /></td>
+            </tr>
+        </table>
     </form>
 </body>
 </html>
