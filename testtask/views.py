@@ -1,4 +1,5 @@
 #coding=utf8
+from django import template
 from django.http import HttpResponse
 from django.views.generic.base import View
 from django.views.generic import ListView
@@ -22,6 +23,16 @@ from .constants import (
     alibaba_url,
     QUERY_WORD_PER_PAGE,
 )
+
+
+register = template.Library()
+
+@register.filter(name='list_iter')
+def list_iter(lists):
+    list_a, list_b = lists
+
+    for x, y in zip(list_a, list_b):
+        yield (x, y)
 
 
 def generate_verify_code():
@@ -100,22 +111,16 @@ def process_query(query_text_list, name, type, user):
         except Exception, e:
             utf8_item = item
 
-        word_item1 = QueryWord.objects.create(
+        word_item = QueryWord.objects.create(
             task=task, 
-            source="makepolo", 
             query_text=utf8_item,
         )
-        query_url_list.append((query_url, word_item1))
+        query_url_list.append((query_url, word_item))
         
         # alibaba
         query_url = alibaba_url + urllib.quote(item)
         print query_url
-        word_item2 = QueryWord.objects.create(
-            task=task, 
-            source="alibaba", 
-            query_text=utf8_item,
-        )
-        query_url_list.append((query_url, word_item2))
+        query_url_list.append((query_url, word_item))
 
     tp = ThreadPool(query_url_list, CON_REQ)
 
@@ -179,15 +184,16 @@ def do_job(args):
             print item
         for item in query_parser.title_list:
             print item
+
         link_and_title = zip(query_parser.href_list, query_parser.title_list)
         link_and_title = link_and_title[:5]  # 只取前5项
-
 
         for item in link_and_title:
             print  item[0]
             print item[1]
             QueryItem.objects.create(
                 queryword = qword_obj,
+                source = source,
                 title = item[1],
                 href = item[0],
             )
@@ -242,20 +248,47 @@ class GetQueryWordHandler(ListView):
     def get_context_data(self, **kwargs):
         context = super(GetQueryWordHandler, self).get_context_data(**kwargs)
         query_words = context['query_word_list']
-        query_items = QueryItem.objects.filter(
-            queryword = query_words[0],
-        )
+        try:
+            query_word_seq = int(self.request.GET['query_word_seq'])
+        except:
+            query_word_seq = 0
 
-        context['makepolo_query_item'] = query_items
+        makepolo_query_items = []
+        alibaba_query_items = []
+        if query_words:
+            makepolo_query_items = QueryItem.objects.filter(
+                queryword = query_words[query_word_seq],
+                source = "makepolo",
+            )
 
+            alibaba_query_items = QueryItem.objects.filter(
+                queryword = query_words[query_word_seq],
+                source = "1688",
+            )
+
+        context['query_item'] = map(None, makepolo_query_items, alibaba_query_items)
         return context
 
     def get_queryset(self):
-        #self.task_id = self.request.POST['task_id']
-        self.task_id = 16
-        query_words = QueryWord.objects.filter(
-            task__id=self.task_id,
-            source = "makepolo",
-        )
+        #self.task_id = self.request.GET['task_id']
+        try:
+            query_word_text = self.request.GET['search_word']
+        except:
+            query_word_text = None
+        self.task_id = 1
+        if query_word_text:
+            query_words = QueryWord.objects.filter(
+                task__id=self.task_id,
+                query_text=query_word_text,
+            )
+        else:
+            query_words = QueryWord.objects.filter(
+                task__id=self.task_id,
+            )
+
 
         return query_words
+
+
+#class GetQueryTaskHandler(ListView):
+#    template_name = 'testtask/task_query.html'

@@ -15,12 +15,15 @@ class Task(models.Model):
 
 class QueryWord(models.Model):
     task = models.ForeignKey(Task)
-    source = models.CharField(max_length=30)
     query_text = models.CharField(max_length=100)
+
+    class Meta:
+        unique_together = ('task', 'query_text',)
 
 
 class QueryItem(models.Model):
     queryword = models.ForeignKey(QueryWord)
+    source = models.CharField(max_length=30)
     title = models.CharField(max_length=1000)
     href = models.CharField(max_length=2048)
     rating = models.IntegerField(blank=True, null=True)

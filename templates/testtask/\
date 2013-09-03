@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="GBK">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=GBK">
+<title>	相关性评估页 </title>
+</head>
+<body>
+    <table name="left-list", width=200>
+        <tr>
+            <th> queyr列表 </th>
+        </tr>
+        {% for item in query_word_list %} 
+            <tr>
+                <td>{{ item.query_text }}</td>
+            </tr>
+        {% endfor %}
+
+        {% if is_paginated %}
+        <div>
+            <tr>
+            <td>
+            {% if page_obj.has_previous %}
+            <a href="/testtask/get_query_word?page={{ page_obj.previous_page_number }}" data-page="{{ page_obj.previous_page_number }}">上页</a>
+            {% endif %}
+                {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+            {% if page_obj.has_next %}
+            <a href="/testtask/get_query_word?page={{ page_obj.next_page_number }}" data-page="{{ page_obj.next_page_number }}">下页</a>
+            {% endif %}
+            </td>
+            </tr>
+        </div>
+        {% endif %}
+    </table>
+
+    <table name="middle-list" border=1px width=400 >
+        <tr>
+            <th> 马可波罗 </th>
+            <th> 阿里巴巴 </th>
+        </tr>
+        {% for m_item, a_item in query_item %}
+        <tr>
+            <td>
+                <a href={{ m_item.href }}>{{ m_item.title }}</a><br />
+            </td>
+            <td>
+                <a href={{ a_item.href }}>{{ a_item.title }}</a><br />
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
