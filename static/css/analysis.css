@@ -1,0 +1,5 @@
+@charset "UTF-8";
+/* CSS Document */
+.diagram-box{}
+.diagram-box .unit-chart{ float:left; margin:12px; border:1px solid #ddd; width:510px; border-radius:5px; -webkit-border-radius:5px; -moz-border-radius:5px;}
+.diagram-box .unit-chart .saler-name{ padding:10px; text-align:center; font-size:14px;}

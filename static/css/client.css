@@ -1,0 +1,28 @@
+@charset "UTF-8";
+/* CSS Document */
+.search-box{ padding:10px 0; border-bottom:1px solid #ddd;}
+.search-box td{ padding:5px;}
+.search-box label{ padding-right:10px;}
+.search-box .search-line{ padding-bottom:10px;}
+.search-box .search-line li{ float:left; padding-right:20px;}
+.search-box .search-line li.search-btn{ float:right;}
+
+.refresh-line{ padding:10px 0;}
+.refresh-line .left-btn{ float:left;}
+.refresh-line .left-btn a{ float:left; margin-right:10px;}
+.refresh-line .right-btn{ float:right;}
+
+.main-box h4{ padding-bottom:20px; font-weight:bold;}
+table.type-table{ width:auto;}
+table.type-table td{ padding:5px 0px;}
+table.type-table .tag{ text-align:right; padding-left:40px; vertical-align:top;}
+table.type-table label{ padding-right:20px;}
+table.type-table button{ float:right;}
+table.type-table textarea{ border:1px solid #ddd; width:380px; padding:5px; height:160px;}
+
+.openwin-update{ line-height:40px; text-align:center; padding:20px 50px;}
+.openwin-feedback textarea{ border:1px solid #ddd; width:450px; height:200px; margin:auto; display:block; padding:5px;}
+.openwin-move{ line-height:40px; text-align:center; padding:20px 50px;}
+
+.type-table .enterprise-select{ display:none;}
+.type-table .error-box{ color:#b30000; display:none;}

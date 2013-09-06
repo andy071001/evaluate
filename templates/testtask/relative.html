@@ -4,6 +4,11 @@
 <head>
 <meta http-equiv="content-type" content="text/html; charset=GBK">
 <title>	相关性评估页 </title>
+
+<link href="{% static 'css/base.css' %}" rel="stylesheet" type="text/css" />
+<link href="{% static 'css/common.css' %}" rel="stylesheet" type="text/css" />
+<link href="{% static 'css/system.css' %}" rel="stylesheet" type="text/css" />
+
 </head>
 <style>
     .choose_reason {
@@ -16,6 +21,21 @@
     }    
 </style>
 <body>
+
+    <div class="header-box main-width fn-clear">
+        <a class="logo"><img src="{% static 'image/makepolo_logo.png' %}" /></a>
+    </div>
+        <div class="nav-line fn-clear">
+            马可波罗搜索测试平台
+            <div class="login-out">
+                {{ user.username }}
+                <a href="/testtask/logout">退出</a>
+            </div>
+        </div>
+        <div>
+            <a href="/testtask/get_query_task">首页</a>
+        </div>
+
     <table width="100%" border=1px>
         <td width="10%" valign="top">
         <table name="left-list" width=200>
@@ -60,33 +80,167 @@
     <table name="middle-list" border=1px width="100%" style="table-layout:fixed;word-break:break-all">
         <tbody>
         <tr>
+            {% if type == 1 %}
             <th width="50%" > 马可波罗 </th>
             <th width="50%" > 阿里巴巴 </th>
+            {% endif %}
+            {% if type == 3 %}
+            <th width="50%"> 线上策略 </th>
+            <th width="50%" > 新策略 </th>
+            {% endif %}
+            {% if type == 2 %}
+            <th width="50%" > 马可波罗 </th>
+            {% endif %}
         </tr>
+        {% if type == 1 %}
         {% for m_item, a_item in query_item %}
         <tr>
             <td>
                 <a href={{ m_item.href }}>{{ m_item.title }}</a><br />
                 {{ m_item.href }}
                 <br />
-                4<input type="radio" name="rating" value="4"/ >
-                3<input type="radio" name="rating" value="3"/ >
-                2<input type="radio" name="rating" value="2"/ >
-                1<input type="radio" name="rating" value="1"/ >
-                <div class="choose_reason">
+                4<input type="radio" name="m_rating_{{ m_item.id }}" value=4 {% if m_item.rating == 4 %} checked='checked' {% endif %} />
+                3<input type="radio" name="m_rating_{{ m_item.id }}" value=3 {% if m_item.rating == 3 %} checked='checked' {% endif %} />
+                2<input type="radio" name="m_rating_{{ m_item.id }}" value=2 {% if m_item.rating == 2 %} checked='checked' {% endif %} />
+                1<input type="radio" name="m_rating_{{ m_item.id }}" value=1 {% if m_item.rating == 1 %} checked='checked' {% endif %} />
+                <div class="choose_reason"
+                    data-deadlink="{{ m_item.deadlink }}" 
+                    data-repeat="{{ m_item.repeat }}" 
+                    data-change="{{ m_item.change }}"
+                    data-keyword="{{ m_item.keyword }}"
+                    data-cutword="{{ m_item.cutword }}"
+                    data-lowquality="{{ m_item.lowquality }}"
+                    data-noimage="{{ m_item.noimage }}"
+                    data-lessthan5="{{ m_item.lessthan5 }}"
+                    data-note="{{ m_item.note }}"
+                    data-query_item_id="{{ m_item.id }}"
+                    data-source="makepolo"
+                    data-posturl="/testtask/set_bad_reason" 
+                >
                     选择原因
                 </div>
+                <input type="checkbox" name="m_business_{{ m_item.id }}"  value="5" {% if m_item.is_business %} checked='checked' {% endif %} />商业结果
+                <input type="checkbox" name="m_free_{{ m_item.id }}" value="6" {% if m_item.is_free %} checked='checked' {% endif %} />免费结果
+                
             </td>
             <td>
                 <a href={{ a_item.href }}>{{ a_item.title }}</a><br />
                 {{ a_item.href }}
+                <br />
+                4<input type="radio" name="a_rating_{{ a_item.id }}" value="4" {% if a_item.rating == 4 %} checked {% endif %} />
+                3<input type="radio" name="a_rating_{{ a_item.id }}" value="3" {% if a_item.rating == 3 %} checked {% endif %} />
+                2<input type="radio" name="a_rating_{{ a_item.id }}" value="2" {% if a_item.rating == 2 %} checked {% endif %} />
+                1<input type="radio" name="a_rating_{{ a_item.id }}" value="1" {% if a_item.rating == 1 %} checked {% endif %} />
+                <div class="choose_reason"
+                    data-deadlink="{{ a_item.deadlink }}" 
+                    data-repeat="{{ a_item.repeat }}" 
+                    data-change="{{ a_item.change }}"
+                    data-keyword="{{ a_item.keyword }}"
+                    data-cutword="{{ a_item.cutword }}"
+                    data-lowquality="{{ a_item.lowquality }}"
+                    data-noimage="{{ a_item.noimage }}"
+                    data-lessthan5="{{ a_item.lessthan5 }}"
+                    data-note="{{ a_item.note }}"
+                    data-query_item_id="{{ a_item.id }}"
+                    data-source="alibaba"
+                    data-posturl="/testtask/set_bad_reason" 
+                >
+                    选择原因
+                </div>
+                <input type="checkbox" name="a_business_{{ a_item.id }}"  value="5" {% if a_item.is_business %} checked {% endif %} />商业结果
+                <input type="checkbox" name="a_free_{{ a_item.id }}" value="6" {% if a_item.is_free %} checked {% endif %} />免费结果
             </td>
         </tr>
         {% endfor %}
+        {% endif %}
+
+        {% if type == 3 %}
+        {% for m_item, a_item in query_item %}
+        <tr>
+            <td>
+                <a href={{ m_item.href }}>{{ m_item.title }}</a><br />
+                {{ m_item.href }}
+                <br />
+                
+            </td>
+            <td>
+                <a href={{ a_item.href }}>{{ a_item.title }}</a><br />
+                {{ a_item.href }}
+                <br />
+            </td>
+        </tr>
+        {% endfor %}
+        {% endif %}
+
+        {% if type == 2 %}
+        {% for m_item in query_item %}
+        <tr>
+            <td>
+                <a href={{ m_item.href }}>{{ m_item.title }}</a><br />
+                {{ m_item.href }}
+                <br />
+                4<input type="radio" name="m_rating_{{ m_item.id }}" value=4 {% if m_item.rating == 4 %} checked='checked' {% endif %} />
+                3<input type="radio" name="m_rating_{{ m_item.id }}" value=3 {% if m_item.rating == 3 %} checked='checked' {% endif %} />
+                2<input type="radio" name="m_rating_{{ m_item.id }}" value=2 {% if m_item.rating == 2 %} checked='checked' {% endif %} />
+                1<input type="radio" name="m_rating_{{ m_item.id }}" value=1 {% if m_item.rating == 1 %} checked='checked' {% endif %} />
+                <div class="choose_reason"
+                    data-deadlink="{{ m_item.deadlink }}" 
+                    data-repeat="{{ m_item.repeat }}" 
+                    data-change="{{ m_item.change }}"
+                    data-keyword="{{ m_item.keyword }}"
+                    data-cutword="{{ m_item.cutword }}"
+                    data-lowquality="{{ m_item.lowquality }}"
+                    data-noimage="{{ m_item.noimage }}"
+                    data-lessthan5="{{ m_item.lessthan5 }}"
+                    data-note="{{ m_item.note }}"
+                    data-query_item_id="{{ m_item.id }}"
+                    data-source="makepolo"
+                    data-posturl="/testtask/set_bad_reason" 
+                >
+                    选择原因
+                </div>
+                <input type="checkbox" name="m_business_{{ m_item.id }}"  value="5" {% if m_item.is_business %} checked='checked' {% endif %} />商业结果
+                <input type="checkbox" name="m_free_{{ m_item.id }}" value="6" {% if m_item.is_free %} checked='checked' {% endif %} />免费结果
+                
+            </td>
+        </tr>
+        {% endfor %}
+        {% endif %}
+        <tr>
+        </tr>
     </tbody>
     </table>
     </td>
 </table>
+
+<form action="/testtask/add_word_note" id="note_form" metho="get">
+    {% csrf_token %}
+    <div align='center' width="100%">
+    {% if type == 3 %}
+    左边好很多<input type="radio" name="qword_rating" value=0 {% if query_word_item.score == 0 %} checked='checked' {% endif %} />
+    左边好一些<input type="radio" name="qword_rating" value=1 {% if query_word_item.score == 1 %} checked='checked' {% endif %} />
+    两边差不多<input type="radio" name="qword_rating" value=2 {% if query_word_item.score == 2 %} checked='checked' {% endif %} />
+    右边好一些<input type="radio" name="qword_rating" value=3 {% if query_word_item.score == 3 %} checked='checked' {% endif %} />
+    右边好很多<input type="radio" name="qword_rating" value=4 {% if query_word_item.score == 4 %} checked='checked' {% endif %} />
+    两边都很差<input type="radio" name="qword_rating" value=5 {% if query_word_item.score == 5 %} checked='checked' {% endif %} />
+    {% endif %}
+    <p style="font-size:30px">备注</p>
+    <textarea rows="10" name="word_note" cols="200" ">
+        {{ query_word_item.note }}
+    </textarea>
+    <input type="hidden" name="word_id" value="{{ query_word_item.id }}" />
+    <input type="hidden" name="query_word_seq" value="{{ query_word_seq }}" />
+    <input type="hidden" name="current_page" value="{{ page_obj.number }}" />
+    <div align='center' width="100%">
+    {% if query_word_seq > 0 %}
+    <input type="submit" style="width:100px" name="last" value="上一条" />
+    {% endif %}
+    {% if query_word_seq < last_word_seq %}
+    <input type="submit" style="width:100px" name="next" value="下一条" />
+    {% endif %}
+    </div>
+    </div>
+</form>
 
 <script type="text/template" id="openWin">
     <div id="open-window" class="fn-openwin">
@@ -105,9 +259,35 @@
 </script>
 
 <script type="text/template" id="choose-content">
-    <div class="openwin-plan">
-        just for test
-    </div>
+            <form id="choose_reason_form">
+                {% csrf_token %}
+        <table>
+            <tr>
+                <td><input type="checkbox" name="deadlink"  value="checked" <%deadlink%> } />死链</td>
+                <td><input type="checkbox" name="repeat"  value="checked" <%repeat%> />公司重复</td>
+            </tr>
+            <tr>
+
+                <td><input type="checkbox" name="change"  value="checked" <%change%> />含义转变</td>
+                <td><input type="checkbox" name="keyword"  value="checked" <%keyword%> } />出现部分关键字</td>
+            </tr>
+            <tr>
+                <td><input type="checkbox" name="cutword"  value="checked" <%cutword%> } />切词七零八落</td>
+                <td><input type="checkbox" name="lowquality"  value="checked" <%lowquality%> />低质量内容页</td>
+            </tr>
+            <tr>
+                <td><input type="checkbox" name="noimage"  value="checked" <%noimage%> />无图片</td>
+                <td><input type="checkbox" name="lessthan5"  value="checked" <%lessthan5%> />结果数少于5</td>
+            </tr>
+            <tr>
+                <td>备注: <input type="text" name="note" value="<%note%>"/></td>
+            </tr>
+            <tr>
+                <input type="hidden" name="source" value="<%source%>" />
+                <input type="hidden" name="query_item_id" value="<%query_item_id%>" />
+            </tr>
+        </table>
+            </form>
 </script>
 </body>
 <script type="text/javascript" src="{% static 'js/lib/jquery-1.8.2.min.js'  %}"></script>

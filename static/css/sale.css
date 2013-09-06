@@ -1,0 +1,12 @@
+@charset "UTF-8";
+/* CSS Document */
+.sale-summary{ border-bottom:1px solid #ddd; padding-bottom:10px;}
+.sale-summary table{width:auto;}
+.sale-summary table td{ padding-bottom:8px; padding-right:25px;}
+.search-box{ padding:10px 0; border-bottom:1px solid #ddd;}
+.search-box td{ padding:5px;}
+.search-box label{ padding-right:10px;}
+.refresh-line{ padding:10px 0;}
+.refresh-line a{ float:right;}
+.openwin-update{ line-height:40px; text-align:center; padding:20px 50px;}
+.openwin-feedback textarea{ border:1px solid #ddd; width:450px; height:200px; margin:auto; display:block; padding:5px;}

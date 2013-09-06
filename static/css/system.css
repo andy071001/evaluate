@@ -1,0 +1,13 @@
+@charset "UTF-8";
+/* CSS Document */
+
+.control-line{ float:right; padding-bottom:10px;}
+.control-line li{ display:inline-block; padding-left:10px;}
+
+.openwin-profile{ padding:20px 50px;}
+.fn-openwin table td{ line-height:40px;}
+.openwin-password{ padding:20px 50px;}
+.openwin-move{ line-height:40px; text-align:center; padding:20px 50px;}
+.openwin-create input[type="text"],
+.openwin-create input[type="password"]{width:160px;}
+.openwin-create .span-td{ padding-left:30px;}

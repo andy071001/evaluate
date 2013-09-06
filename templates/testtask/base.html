@@ -1,0 +1,131 @@
+{% load static from staticfiles %}
+
+{% with current_url=request.path %}
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>{% block title %}91外教客户关系管理系统-订单管理{% endblock %}</title>
+{% block common %}
+<link href="{% static 'css/base.css' %}" rel="stylesheet" type="text/css" />
+<link href="{% static 'css/common.css' %}" rel="stylesheet" type="text/css" />
+{% endblock %}
+{% block extra_head %}{% endblock %}
+</head>
+
+<body>
+<div id="header">
+{% block header %}
+	<div class="header-box main-width fn-clear">
+		<a class="logo"><img src="{% static 'image/crm_logo.png' %}" /></a>
+        <ul>
+		<li>转移用户：<strong>{{ from_count }}</strong> </li>
+		<li>被转移用户：<strong>{{ to_count }}</strong> </li>
+        </ul>
+        <ul>
+		<li>今日注册用户数：<strong>{{ register_num }}</strong> </li>
+		<li>今日上课用户：<strong>{{ take_class_num }}</strong> </li>
+		<li>今日到期用户：<strong>{{ expire_num }}</strong> </li>
+        </ul>
+    </div>
+    <div class="nav-line fn-clear">
+    	<div class="main-width">
+            <ul class="nav">
+		{% if current_url == "/student/querystudent" %}
+                <li class="btnon"><a href="/student/querystudent">客户管理</a></li>
+		{% else %}
+                <li><a href="/student/querystudent">客户管理</a></li>
+		{% endif %}
+		{% if current_url == "/student/getsalepage" %}
+                <li class="btnon"><a href="/student/getsalepage">销售管理</a></li>
+		{% else %}
+                <li><a href="/student/getsalepage">销售管理</a></li>
+		{% endif %}
+		{% if current_url == "/order/getmonth" %}
+                <li class="btnon"><a href="/order/getmonth">统计分析</a></li>
+		{% else %}
+                <li><a href="/order/getmonth">统计分析</a></li>
+		{% endif %}
+		{% if current_url == "/accounts/getsystempage" %}
+                <li class="btnon"><a href="/accounts/getsystempage">系统管理</a></li>
+		{% else %}
+                <li><a href="/accounts/getsystempage">系统管理</a></li>
+		{% endif %}
+		{% if current_url == "/order/getorderpage" %}
+                <li class="btnon"><a href="/order/getorderpage">订单管理</a></li>
+		{% else %}
+                <li><a href="/order/getorderpage">订单管理</a></li>
+		{% endif %}
+            </ul>
+            <div class="login-out">
+                <a href="/accounts/changepassword">修改密码</a>
+                <a href="/accounts/logout">退出</a>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+</div>
+<div id="content" class="main-width">
+{% block content %}
+	<ul class="main-nav">
+    	<li class="btnon"><a href="#">订单列表</a></li>
+    </ul>
+    <div class="main-box">
+    	<table class="data-table">
+          <tr>
+            <th><a class="test-btn">test</a></th>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+          </tr>
+        </table>
+        <div class="pages">
+        	<a href="#">第一页</a>
+        	<a href="#" class="btnon">1</a>
+            <a href="#">2</a>
+            <a href="#">3</a>
+            <a href="#">4</a>
+            <a href="#">5</a>
+            <a href="#">...</a>
+            <a href="#">最后一页</a>
+        </div>
+    </div>
+{% endblock %}
+</div>
+{% block javascript %}
+<script type="text/template" id="openWin">
+	<div id="open-window" class="fn-openwin">
+		<div class="openwin-mask"></div>
+		<div class="openwin-box">
+			<div class="openwin-title">
+				<h3><%title%></h3>
+				<a href="#" class="close-btn">x</a>
+			</div>
+			<div class="openwin-content <%alertBox%>"><%content%></div>
+			<div class="openwin-btnline">
+				<a class="submit-btn"><%submitBtn%></a>
+			</div>
+		</div>
+	</div>
+</script>
+<script type="text/template" id="test-content">
+	<input type="text" />
+	<div>test</div>
+</script>
+</body>
+<script type="text/javascript" src="{% static 'js/lib/jquery-1.8.2.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/lib/jquery.placeholder.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/lib/mustache.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/openWin.js' %}"></script>
+<script type="text/javascript">
+	$(function(){
+		$(".test-btn").click(function(){
+			$(this).openWin({title:"aaa",submitBtn:"ccc"},{temp:$("#test-content")});
+		})
+	})
+</script>
+{% endblock %}
+
+{% block private %}{% endblock %}
+</html>
+{% endwith %}

@@ -1,73 +1,119 @@
 <!DOCTYPE html>
+{% load staticfiles %}
 <html xmlns="http://www.w3.org/1999/xhtml" lang="GBK">
 <head>
 <meta http-equiv="content-type" content="text/html; charset=GBK">
-<title>	相关性评估页 </title>
+<title> 马可波罗搜索测试平台 </title>
+<link href="{% static 'css/base.css' %}" rel="stylesheet" type="text/css" />
+<link href="{% static 'css/common.css' %}" rel="stylesheet" type="text/css" />
+<link href="{% static 'css/system.css' %}" rel="stylesheet" type="text/css" />
 </head>
-
 <body>
+    <div class="header-box main-width fn-clear">
+        <a class="logo"><img src="{% static 'image/makepolo_logo.png' %}" /></a>
+    </div>
+    <div class="nav-line fn-clear">
+        马可波罗搜索测试平台
+    <div class="login-out">
+        {{ user.username }}
+        <a href="/testtask/logout">退出</a>
+    </div>
+    </div>
+    <div>
+        <a href="/testtask/get_query_task">首页</a>
+        <p><a href="/testtask/upload">创建测试任务</a></p>
+    </div>
+
     <table width="100%" border=1px>
-        <td width="10%" valign="top">
-        <table name="left-list" width=200>
         <tr>
-            <th> queyr列表 </th>
+            <th>任务名称</th>
+            <th>创建人</th>
+            <th>创建时间</th>
+            <th>总数</th>
+            <th>完成</th>
+            <th>任务状态</th>
+            <th>导出结果</th>
+            <th>复制任务</th>
+            <th>删除任务</th>
         </tr>
-        {% for query_word in query_word_list %} 
-            <tr>
-                <td><a href="/testtask/get_query_word?page={{ page_obj.number }}&task_id={{ query_word.task.id }}&query_word_seq={{ forloop.counter0 }}" >{{ query_word.query_text }}</a></td>
-            </tr>
+        {% for task in query_task_list %}
+        <tr>
+            <td><a href="/testtask/get_query_word?task_id={{ task.id }}">{{ task.name }}</a></td>
+            <td>{{ task.creator.username }}</td>
+            <td>{{ task.create_time|date:"Y-m-d H:i" }}</td>
+            <td>{{ task.number }}</td>
+            <td>{{ task.complete }}</td>
+            <td>
+                {% if task.state %}
+                已完成
+                {% else %}
+                <p style="color:red">未完成</p>
+                {% endif %}
+                
+            <td><a href="/testtask/output_to_excel?task_id={{ task.id }}">导出</a></td>
+            <td><a class="to_copy_task" data-posturl="/testtask/copy_task" data-task_id="{{ task.id }}" >复制</a></td>
+            <td>
+                {% if task.creator == user %}
+                <a class="to_delete_task" data-posturl="/testtask/delete_task" data-task_id="{{ task.id }}">删除</a>
+                {% else %}
+                无权限
+                {% endif %}
+            </td>
+        </tr>
         {% endfor %}
 
         {% if is_paginated %}
         <div>
             <tr>
-            <td>
-            {% if page_obj.has_previous %}
-            <a href="/testtask/get_query_word?page={{ page_obj.previous_page_number }}" data-page="{{ page_obj.previous_page_number }}">上页</a>
-            {% endif %}
-                {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
-            {% if page_obj.has_next %}
-            <a href="/testtask/get_query_word?page={{ page_obj.next_page_number }}" data-page="{{ page_obj.next_page_number }}">下页</a>
-            {% endif %}
-            </td>
+                <td>
+                    {% if page_obj.has_previous %}
+                    <a href="/testtask/get_query_task?page={{ page_obj.previous_page_number }}" data-page="{{ page_obj.previous_page_number }}">上页</a>
+                    {% endif %}
+                    {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+                    {% if page_obj.has_next %}
+                    <a href="/testtask/get_query_task?page={{ page_obj.next_page_number }}" data-page="{{ page_obj.next_page_number }}">下页</a>
+                    {% endif %}
+                </td>
             </tr>
         </div>
         {% endif %}
-        <br />
-        <br />
-        <form action="/testtask/get_query_word" method="get" >
-        <tr>
-            <td>
-                {% csrf_token %}
-                <input type="text" name="search_word" value=""><br/ >
-                <input type="submit" value="Search" name="s-btn">
-            </td>
-        </tr>
-        </form>
     </table>
-    </td>
-    <td width="90%">
-    <table name="middle-list" border=1px width="100%" style="table-layout:fixed;word-break:break-all">
-        <tbody>
-        <tr>
-            <th width="50%" > 马可波罗 </th>
-            <th width="50%" > 阿里巴巴 </th>
-        </tr>
-        {% for m_item, a_item in query_item %}
-        <tr>
-            <td>
-                <a href={{ m_item.href }}>{{ m_item.title }}</a><br />
-                {{ m_item.href }}
-            </td>
-            <td>
-                <a href={{ a_item.href }}>{{ a_item.title }}</a><br />
-                {{ a_item.href }}
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-    </table>
-    </td>
-</table>
+
+    <script type="text/template" id="openWin">
+        <div id="open-window" class="fn-openwin">
+            <div class="openwin-mask"></div>
+            <div class="openwin-box">
+                <div class="openwin-title">
+                    <h3><%title%></h3>
+                    <a href="#" class="close-btn">x</a>
+                </div>
+                <div class="openwin-content <%alertBox%>"><%content%></div>
+                <div class="openwin-btnline">
+                    <a class="submit-btn"><%submitBtn%></a>
+                </div>
+            </div>
+        </div>
+    </script>
+
+    <script type="text/template" id="delete_task">
+    <form id="delete_task_form">
+        {% csrf_token %}
+        确定删除此任务么？
+        <input type="hidden" name="task_id" value="<%task_id%>" />
+    </form>
+    </script>
+
+    <script type="text/template" id="copy_task">
+    <form id="copy_task_form">
+        {% csrf_token %}
+        确定复制此任务么？
+        <input type="hidden" name="task_id" value="<%task_id%>" />
+    </form>
+    </script>
 </body>
+<script type="text/javascript" src="{% static 'js/lib/jquery-1.8.2.min.js'  %}"></script>
+<script type="text/javascript" src="{% static 'js/lib/jquery.placeholder.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/lib/mustache.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/openWin.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/task.js' %}"></script>
 </html>

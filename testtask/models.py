@@ -11,11 +11,14 @@ class Task(models.Model):
     complete = models.IntegerField(default=0)
     state = models.BooleanField(default=False)
     type = models.IntegerField()
+    is_delete = models.BooleanField(default=False)
 
 
 class QueryWord(models.Model):
     task = models.ForeignKey(Task)
     query_text = models.CharField(max_length=100)
+    note = models.CharField(max_length=1000)
+    score = models.IntegerField(default=2, blank=True, null=True)
 
     class Meta:
         unique_together = ('task', 'query_text',)
@@ -27,7 +30,14 @@ class QueryItem(models.Model):
     title = models.CharField(max_length=1000)
     href = models.CharField(max_length=2048)
     rating = models.IntegerField(blank=True, null=True)
-    reason =  models.IntegerField(blank=True, null=True)  # bit位表示选项
     note = models.CharField(max_length=100, blank=True, null=True)
     is_business = models.BooleanField(default=False)
     is_free = models.BooleanField(default=False)
+    deadlink = models.CharField(max_length=30)
+    repeat = models.CharField(max_length=30)
+    change = models.CharField(max_length=30)
+    keyword = models.CharField(max_length=30)
+    cutword = models.CharField(max_length=30)
+    lowquality = models.CharField(max_length=30)
+    noimage = models.CharField(max_length=30)
+    lessthan5 = models.CharField(max_length=30)

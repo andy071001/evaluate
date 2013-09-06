@@ -1,27 +1,34 @@
 #coding=utf8
 from django import template
-from django.http import HttpResponse
+from django.http import HttpResponse ,HttpResponseRedirect
 from django.views.generic.base import View
 from django.views.generic import ListView
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.contrib.auth import authenticate, login
+from django.core.urlresolvers import reverse
 
+import json
 import random
 import urllib
 import urllib2
 import threading
 import Queue
 import datetime
+import xlwt
 from sgmllib import SGMLParser
 
 from .models import Task, QueryWord, QueryItem
 from .constants import (
     VERIFY_CODE_LENGTH, 
     CON_REQ, 
-    makepolo_url, 
+    online_makepolo_url, 
+    strategy_makepolo_url, 
     alibaba_url,
     QUERY_WORD_PER_PAGE,
+    QUERY_TASK_PER_PAGE, 
+    SHEET_NAME_DICT,
+    STRATEGY_RATING_TEXT,
 )
 
 
@@ -59,7 +66,7 @@ class LoginHandler(View):
         if user is not None:
             if user.is_active:
                 login(request, user)
-                return HttpResponse("Login Successfully!")
+                return HttpResponseRedirect("/testtask/get_query_task")
             else:
                 return HttpResponse("Disabled Account!")
         else:
@@ -78,15 +85,13 @@ class UploadHandler(View):
             context_instance = RequestContext(request))
 
     def post(self, request):
-        print "request.user:"
-        print request.user
         name = request.POST['name']
         type = int(request.POST['type'])
         file_handler = request.FILES.get('file', None)
         query_text_list = file_handler.readlines()
         process_query(query_text_list, name, type, request.user)
         file_handler.close()
-        return HttpResponse("good")
+        return HttpResponseRedirect("/testtask/get_query_task")
 
 
 def process_query(query_text_list, name, type, user):
@@ -103,9 +108,9 @@ def process_query(query_text_list, name, type, user):
     query_url_list = []
     for item in query_text_list:
         item = item.strip()  # 去除首尾空白
-        # makepolo
-        query_url = makepolo_url + urllib.quote(item)
-        print query_url
+        # online makepolo
+        query_url = online_makepolo_url + urllib.quote(item)
+
         try:
             utf8_item = unicode(item, "gbk").encode("utf8")
         except Exception, e:
@@ -115,12 +120,17 @@ def process_query(query_text_list, name, type, user):
             task=task, 
             query_text=utf8_item,
         )
-        query_url_list.append((query_url, word_item))
+        query_url_list.append((query_url, word_item, type))
         
-        # alibaba
-        query_url = alibaba_url + urllib.quote(item)
-        print query_url
-        query_url_list.append((query_url, word_item))
+        if (type == 1):  # 相关评估
+            # alibaba
+            query_url = alibaba_url + urllib.quote(item)
+            query_url_list.append((query_url, word_item, type))
+        if (type == 2):  # 数据质量评估
+            pass  # do nothing, don't need to put url in the query list
+        if (type == 3):  # 策略GSB评估
+            query_url = strategy_makepolo_url + urllib.quote(item)
+            query_url_list.append((query_url, word_item, type))
 
     tp = ThreadPool(query_url_list, CON_REQ)
 
@@ -168,29 +178,40 @@ class MyThread(threading.Thread):
 def do_job(args):
     try:
         url = args[0]
+        print "----------->", url
         qword_obj = args[1]
+        type = args[2]  # 评估策略类型
         sock = urllib2.urlopen(url)
         response = sock.read()
         sock.close()
-        if '192.168.0.211' in url:
-            source = "makepolo"
-        if "1688.com" in url:
-            source = "1688"
-        query_parser = QueryResultParser(source)
+        source = ""
+        
+        if (type == 1 or type == 2):  # 相关性评估 或者 数据质量评估
+            if online_makepolo_url in url:
+                source = "online_makepolo"
+            if alibaba_url in url:
+                source = "alibaba"
+
+        if (type == 3):
+            print "###" * 20
+            print "strategy"
+            print strategy_makepolo_url
+            print "online"
+            print online_makepolo_url
+            print "current"
+            print url
+            if strategy_makepolo_url in url:
+                source = "strategy_makepolo"
+            elif online_makepolo_url in url:
+                source = "online_makepolo"
+        query_parser = QueryResultParser(source, type)
         query_parser.feed(response)
        
-        print "query_text: ", qword_obj.query_text, 'href_list length: ', len(query_parser.href_list), 'title_list length: ', len(query_parser.title_list)
-        for item in query_parser.href_list:
-            print item
-        for item in query_parser.title_list:
-            print item
 
         link_and_title = zip(query_parser.href_list, query_parser.title_list)
         link_and_title = link_and_title[:5]  # 只取前5项
 
         for item in link_and_title:
-            print  item[0]
-            print item[1]
             QueryItem.objects.create(
                 queryword = qword_obj,
                 source = source,
@@ -202,8 +223,9 @@ def do_job(args):
        
 
 class QueryResultParser(SGMLParser):
-    def __init__(self, source):
+    def __init__(self, source, type):
         self.source = source
+        self.type = type
         self.is_title = 0
         self.title_text = ""
         self.title_list = []
@@ -215,14 +237,15 @@ class QueryResultParser(SGMLParser):
 
     def start_a(self, attrs):
         attr_dict = dict(attrs)
-        if self.source == "makepolo":
-            if attr_dict.has_key('data-num') and attr_dict['data-num'] == "1":
-                self.is_title = 1
-                self.href_list.append(attr_dict['href'])
-        if self.source == "1688":
-            if attr_dict.has_key('offer-stat') and attr_dict['offer-stat'] == "title":
-                self.is_title = 1
-                self.href_list.append(attr_dict['href'])
+        if attr_dict.has_key('data-num') and attr_dict['data-num'] == "1":
+            self.is_title = 1
+            self.href_list.append(attr_dict['href'])
+
+        if self.type == 1:  # 相关
+            if self.source == "alibaba":
+                if attr_dict.has_key('offer-stat') and attr_dict['offer-stat'] == "title":
+                    self.is_title = 1
+                    self.href_list.append(attr_dict['href'])
 
     def end_a(self):
         if self.is_title:
@@ -241,9 +264,20 @@ class QueryResultParser(SGMLParser):
 
 
 class GetQueryWordHandler(ListView):
-    template_name = 'testtask/relative.html'
+    template_name = "testtask/relative.html"
     paginate_by = QUERY_WORD_PER_PAGE
     context_object_name = "query_word_list"
+
+    #def get_template_names(self):
+    #    try:
+    #        self.task_id = self.request.GET['task_id']
+    #    except:
+    #        self.task_id = 1
+    #    temp_task = Task.objects.get(id=self.task_id)
+    #    if (temp_task.type == 1 or 2):
+    #        return ['testtask/relative.html']
+    #    if (temp_task.type == 3):
+    #        return ['testtask/strategy.html']
 
     def get_context_data(self, **kwargs):
         context = super(GetQueryWordHandler, self).get_context_data(**kwargs)
@@ -253,29 +287,64 @@ class GetQueryWordHandler(ListView):
         except:
             query_word_seq = 0
 
+        type = query_words[query_word_seq].task.type
+        context['type'] = type
+
         makepolo_query_items = []
         alibaba_query_items = []
         if query_words:
             makepolo_query_items = QueryItem.objects.filter(
                 queryword = query_words[query_word_seq],
-                source = "makepolo",
+                source = "online_makepolo",
             )
 
-            alibaba_query_items = QueryItem.objects.filter(
-                queryword = query_words[query_word_seq],
-                source = "1688",
-            )
+            if type == 1:  # 相关
+                alibaba_query_items = QueryItem.objects.filter(
+                    queryword = query_words[query_word_seq],
+                    source = "alibaba",
+                )
+                print "*"*30
+                print alibaba_query_items
+                context['query_item'] = map(lambda *row: list(row) , makepolo_query_items, alibaba_query_items)
+                print "query_item:  "
+                print context["query_item"]
+            if type == 3:  # 策略
+                strategy_query_items = QueryItem.objects.filter(
+                    queryword = query_words[query_word_seq],
+                    source = "strategy_makepolo",
+                )
+                context['query_item'] = map(lambda *row: list(row) , makepolo_query_items, strategy_query_items)
 
-        context['query_item'] = map(None, makepolo_query_items, alibaba_query_items)
+            if type == 2:  # 质量
+                context['query_item'] = makepolo_query_items
+                print "@@@@@"* 80
+                print context["query_item"]
+
+        context['query_word_item'] = query_words[query_word_seq]
+        #context['next_word_seq'] = query_word_seq + 1
+        #contxt['prev_word_seq'] = query_word_seq - 1
+
+        #if (context['prev_word_seq'] < 0)
+        #    context['prev_word_seq'] = 0
+        #if (context['next_word_seq'] >= QUERY_WORD_PER_PAGE)
+        #    context['next_word_seq'] = QUERY_WORD_PER_PAGE - 1
+
+        # context['query_item'] = map(None, makepolo_query_items, alibaba_query_items)
+        context['query_word_seq'] = query_word_seq
+        context['last_word_seq'] = len(query_words) - 1
         return context
 
     def get_queryset(self):
-        #self.task_id = self.request.GET['task_id']
+        try:
+            self.task_id = self.request.GET['task_id']
+        except:
+            self.task_id = 1
+
         try:
             query_word_text = self.request.GET['search_word']
         except:
             query_word_text = None
-        self.task_id = 1
+        # self.task_id = 1
         if query_word_text:
             query_words = QueryWord.objects.filter(
                 task__id=self.task_id,
@@ -286,9 +355,337 @@ class GetQueryWordHandler(ListView):
                 task__id=self.task_id,
             )
 
-
         return query_words
 
 
-#class GetQueryTaskHandler(ListView):
-#    template_name = 'testtask/task_query.html'
+def get_or_none(post_dict, key):
+    try:
+        return post_dict[key]
+    except:
+        return ""
+
+def get_or_false(post_dict, key):
+    try:
+        return post_dict[key]
+    except:
+        return False
+
+class SetBadReasonHandler(View):
+    def post(self, request):
+        query_item_id = get_or_none(request.POST, 'query_item_id')
+        note = get_or_none(request.POST, 'note')
+        source = get_or_none(request.POST, 'source')
+        is_business = get_or_false(request.POST, 'business')
+        is_free = get_or_false(request.POST, 'free')
+        rating = get_or_none(request.POST, 'rating')
+
+        deadlink = get_or_none(request.POST, 'deadlink')
+        repeat = get_or_none(request.POST, 'repeat')
+        change = get_or_none(request.POST, 'change')
+        keyword = get_or_none(request.POST, 'keyword')
+        cutword = get_or_none(request.POST, 'cutword')
+        lowquality = get_or_none(request.POST, 'lowquality')
+        noimage = get_or_none(request.POST, 'noimage')
+        lessthan5 = get_or_none(request.POST, 'lessthan5')
+
+        
+        query_item = QueryItem.objects.get(id=query_item_id)
+
+        query_item.note = note
+        query_item.source = source
+        query_item.is_business = is_business
+        query_item.is_free = is_free
+        if rating:
+            query_item.rating = rating
+
+        query_item.deadlink = deadlink
+        query_item.repeat = repeat
+        query_item.change = change
+        query_item.keyword = keyword
+        query_item.cutword = cutword
+        query_item.lowquality = lowquality
+        query_item.noimage = noimage
+        query_item.lessthan5 = lessthan5
+
+        query_item.save()
+        data = {}
+        data['status'] = "success"
+        data["info"] = "更新成功"
+
+        return HttpResponse(json.dumps(data), content_type="application/json")
+
+
+class GetQueryTaskHandler(ListView):
+    template_name = 'testtask/task_query.html'
+    paginate_by = QUERY_TASK_PER_PAGE
+    context_object_name = "query_task_list"
+
+    def get_context_data(self, **kwargs):
+        context = super(GetQueryTaskHandler, self).get_context_data(**kwargs)
+        return context
+
+    def get_queryset(self):
+        tasks = Task.objects.filter(is_delete=False)
+        return tasks
+
+
+class DeleteTaskHandler(ListView):
+    def post(self, request):
+        task_id = request.POST['task_id']
+        task = Task.objects.get(id=task_id)
+        task.is_delete = True
+        task.save()
+
+        data = {}
+        data['status'] = "success"
+        data["info"] = "更新成功"
+
+        return HttpResponse(json.dumps(data), content_type="application/json")
+
+
+class AddWordNoteHandler(View):
+    def get(self, request):
+        word_item_id = self.request.GET['word_id']
+        word_note = self.request.GET['word_note']
+        word_item = QueryWord.objects.get(id=word_item_id)
+        if word_item.task.type == 3:  # 策略评估需要添加评价
+            word_item.score = self.request.GET['qword_rating']
+        word_item.note = word_note
+        word_item.save()
+
+        last = get_or_none(self.request.GET, 'last')
+        next = get_or_none(self.request.GET, 'next')
+        current_task_id = word_item.task.id
+        query_word_seq = self.request.GET['query_word_seq']
+        current_page = self.request.GET['current_page']
+        if last:
+            current_word_seq = int(query_word_seq) - 1 
+        elif next:
+            current_word_seq = int(query_word_seq) + 1 
+
+        return HttpResponseRedirect('/testtask/get_query_word?page=%s&query_word_seq=%s&task_id=%s' % (current_page, current_word_seq, current_task_id))
+
+
+rel_header = ['query', 'seq', 'title', 'url', 'score', 'comment', 
+              '          ', 'seq', 'title', 'url', 'score', 'comment',
+              '          ', '总comment', 'username',]
+
+quality_header = ['query', 'seq', 'title', 'url', 'score', 'comment', 
+                    '          ', '总comment', 'username',]
+
+strategy_header = ['query', 'seq', 'title', 'url',
+              '          ', 'seq', 'title', 'url', 'score', 
+              '          ', '总comment', 'username',]
+
+header_list = [rel_header, quality_header, strategy_header]
+
+def get_comment_string_for_xls(item):
+    s = ""
+    if item.deadlink == "checked":
+        s += "死链  "
+    if item.repeat == "checked":
+        s += "公司重复  "
+    if item.change == "checked":
+        s += "含义转变  "
+    if item.keyword == "checked":
+        s += "出现部分关键字  "
+    if item.cutword == "checked":
+        s += "切词七零八落  "
+    if item.lowquality== "checked":
+        s += "低质量内容页  "
+    if item.noimage== "checked":
+        s += "无图片  "
+    if item.lessthan5 == "checked":
+        s += "结果数少于5    "
+
+    if item.note:
+        s += item.note
+
+    return s
+
+class OutputToExcelHandler(View):
+    def get(self, request):
+        task_id = request.GET['task_id']
+        task = Task.objects.get(id=task_id)
+
+        book = xlwt.Workbook(encoding='utf8')
+        sheet_name = SHEET_NAME_DICT[task.type-1]
+        sheet = book.add_sheet(sheet_name)
+        #default_style = xlwt.Style.default_style
+        #default_style = xlwt.easyxf('align: wrap on')
+        default_style = xlwt.easyxf('align: vertical center, horizontal center;') 
+
+        query_words = QueryWord.objects.filter(task=task)
+        current_header = header_list[task.type-1]
+        
+        for idx, item in enumerate(current_header):
+            sheet.write(0, idx, item, style=default_style)
+
+        if task.type == 1:  # 相关
+            cur_row = 1
+            for row1, item in enumerate(query_words):
+                makepolo_query_items = QueryItem.objects.filter(
+                    queryword=item,
+                    source="online_makepolo",
+                )
+                
+                alibaba_query_items = QueryItem.objects.filter(
+                    queryword=item,
+                    source="alibaba",
+                )
+                query_item = map(lambda *row: list(row) , makepolo_query_items, alibaba_query_items)
+
+                if item.note:
+                    sheet.write(cur_row, 13, item.note, style=default_style)
+                sheet.write(cur_row, 14, task.creator.username, style=default_style)
+
+                counter = 0
+                 
+                for m_item, a_item in query_item:
+                    if m_item:
+                        sheet.write(cur_row, 0, item.query_text, style=default_style)
+                        sheet.write(cur_row, 1, counter+1, style=default_style)
+                        sheet.write(cur_row, 2, m_item.title, style=default_style)
+                        sheet.write(cur_row, 3, m_item.href, style=default_style)
+                        sheet.write(cur_row, 4, m_item.rating, style=default_style)
+                        
+                        s =  get_comment_string_for_xls(m_item)
+                        sheet.write(cur_row, 5, s, style=default_style)
+                    
+                    if a_item:
+                        sheet.write(cur_row, 7, counter+1, style=default_style)
+                        sheet.write(cur_row, 8, a_item.title, style=default_style)
+                        sheet.write(cur_row, 9, a_item.href, style=default_style)
+                        sheet.write(cur_row, 10, a_item.rating, style=default_style)
+                        
+                        s =  get_comment_string_for_xls(a_item)
+                        sheet.write(cur_row, 11, s, style=default_style)
+
+                    counter += 1
+                    cur_row += 1
+
+        if task.type == 2:  # 数据质量
+            cur_row = 1
+            for row1, item in enumerate(query_words):
+                makepolo_query_items = QueryItem.objects.filter(
+                    queryword=item,
+                    source="online_makepolo",
+                )
+
+                if item.note:
+                    sheet.write(cur_row, 7, item.note, style=default_style)
+                sheet.write(cur_row, 8, task.creator.username, style=default_style)
+
+                counter = 0
+                 
+                for m_item in makepolo_query_items:
+                    if m_item:
+                        sheet.write(cur_row, 0, item.query_text, style=default_style)
+                        sheet.write(cur_row, 1, counter+1, style=default_style)
+                        sheet.write(cur_row, 2, m_item.title, style=default_style)
+                        sheet.write(cur_row, 3, m_item.href, style=default_style)
+                        sheet.write(cur_row, 4, m_item.rating, style=default_style)
+                        
+                        s =  get_comment_string_for_xls(m_item)
+                        sheet.write(cur_row, 5, s, style=default_style)
+                    
+                    counter += 1
+                    cur_row += 1
+
+        if task.type == 3:  # 策略
+            print "*********************************************"
+            print "in type = 3"
+            cur_row = 1
+            for row1, item in enumerate(query_words):
+                makepolo_query_items = QueryItem.objects.filter(
+                    queryword=item,
+                    source="online_makepolo",
+                )
+                
+                strategy_query_items = QueryItem.objects.filter(
+                    queryword=item,
+                    source="strategy_makepolo",
+                )
+                query_item = map(lambda *row: list(row) , makepolo_query_items, strategy_query_items)
+
+                if item.note:
+                    sheet.write(cur_row, 10, item.note, style=default_style)
+                    sheet.write(cur_row, 11, task.creator.username, style=default_style)
+                if item.score:
+                    print "^^^^^^^^^^^%%%%%" * 20
+                    print item.score
+                    sheet.write(cur_row, 8, STRATEGY_RATING_TEXT[item.score], style=default_style)
+
+                counter = 0
+                 
+                for m_item, a_item in query_item:
+                    if m_item:
+                        sheet.write(cur_row, 0, item.query_text, style=default_style)
+                        sheet.write(cur_row, 1, counter+1, style=default_style)
+                        sheet.write(cur_row, 2, m_item.title, style=default_style)
+                        sheet.write(cur_row, 3, m_item.href, style=default_style)
+                    
+                    if a_item:
+                        sheet.write(cur_row, 5, counter+1, style=default_style)
+                        sheet.write(cur_row, 6, a_item.title, style=default_style)
+                        sheet.write(cur_row, 7, a_item.href, style=default_style)
+                        
+
+                    counter += 1
+                    cur_row += 1
+
+        response = HttpResponse(mimetype='application/vnd.ms-excel')
+        response['Content-Disposition'] = 'attachment; filename=example.xls'
+        book.save(response)
+
+        return response
+
+
+class CopyTaskHandler(View):
+    def post(self, request):
+        task_id = get_or_none(self.request.POST, 'task_id')
+        data = {}
+
+        if task_id:
+            task = Task.objects.get(id=task_id)
+            t_id = task.id
+            task.creator = request.user  # change creator to the current user
+            task.pk = None
+            task.create_time = datetime.datetime.now()
+            task.save()  # save task
+
+            query_words = QueryWord.objects.filter(task__id=t_id)
+            for q_word in query_words:
+                q_id = q_word.id
+                q_word.pk = None
+                q_word.task = task
+                q_word.save()  # save query word
+                makepolo_query_items = QueryItem.objects.filter(queryword__id=q_id, source="online_makepolo")
+                for m_item in makepolo_query_items:
+                    m_item.pk = None
+                    m_item.queryword = q_word
+                    m_item.save()  # save query item
+
+                if task.type == 1:  # 相关性评估
+                    alibaba_query_items = QueryItem.objects.filter(queryword__id=q_id, source="alibaba")
+                    for a_item in alibaba_query_items:
+                        a_item.pk = None
+                        a_item.queryword = q_word
+                        a_item.save()
+
+                if task.type == 3:  # 策略评估
+                    strategy_query_items = QueryItem.objects.filter(queryword__id=q_id, source="strategy_makepolo")
+                    for s_item in strategy_query_items:
+                        s_item.pk = None
+                        s_item.queryword = q_word
+                        s_item.save()  # save query item
+
+            data['status'] = "success"
+            data["info"] = "更新成功"
+
+            return HttpResponse(json.dumps(data), content_type="application/json")
+
+        data['status'] = "failure"
+        data["info"] = "更新失败"
+
+        return HttpResponse(json.dumps(data), content_type="application/json")

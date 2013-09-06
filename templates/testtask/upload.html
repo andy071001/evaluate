@@ -1,10 +1,28 @@
 <!DOCTYPE html>
+{% load staticfiles %}
 <html xmlns="http://www.w3.org/1999/xhtml" lang="GBK">
 <head>
 <meta http-equiv="content-type" content="text/html; charset=GBK">
 <title>	上传</title>
+<link href="{% static 'css/base.css' %}" rel="stylesheet" type="text/css" />
+<link href="{% static 'css/common.css' %}" rel="stylesheet" type="text/css" />
+<link href="{% static 'css/system.css' %}" rel="stylesheet" type="text/css" />
 </head>
 <body>
+    <div class="header-box main-width fn-clear">
+        <a class="logo"><img src="{% static 'image/makepolo_logo.png' %}" /></a>
+    </div>
+    <div class="nav-line fn-clear">
+        马可波罗搜索测试平台
+        <div class="login-out">
+            {{ user.username }}
+            <a href="/testtask/logout">退出</a>
+        </div>
+    </div>
+
+    <div>
+        <a href="/testtask/get_query_task">首页</a>
+    </div>
     <form enctype="multipart/form-data" method="POST" action="/testtask/upload/">
         {% csrf_token %}
         <table>

@@ -26,16 +26,14 @@ $.fn.openWin = function(winInfo,contentInfo,submitData){
 	var closeBtn = $("#open-window").find(".close-btn");
 	var submitBtn = $("#open-window").find(".submit-btn")
 	
+    console.log(winTemp)
 	//open window
-    console.log("here in open win");
 	var winHtml = Mustache.to_html(winTemp,winInfo);
+    console.log(winHtml)
 	if($("#open-window").length>0){
 		$("#open-window").remove();
 	}
-    console.log("here in open win1");
 	$("body").append(winHtml);
-    console.log(contentInfo.temp)
-    console.log(contentInfo.temp.html())
 	if(contentInfo){
 		if(contentInfo.tempData){
 			var contentHtml = Mustache.to_html(contentInfo.temp.html(),contentInfo.tempData);
@@ -44,7 +42,6 @@ $.fn.openWin = function(winInfo,contentInfo,submitData){
 		}
 		$("#open-window").find(".openwin-content").html(contentHtml);
 	}
-    console.log("here in open win2");
 	$("#open-window").show();
 	var winBox = $("#open-window").find(".openwin-box");
 	var winMask = $("#open-window").find(".openwin-mask");
@@ -52,6 +49,7 @@ $.fn.openWin = function(winInfo,contentInfo,submitData){
 	var winBoxWidth = winBox.width();
 	var winTop = (winHeight-winBoxHeight)/2;
 	var winLeft = (winWidth-winBoxWidth)/2;
+    console.log(winBoxHeight, winBoxWidth, winTop, winLeft);
 	winBox.css({"top":winTop+"px","left":winLeft+"px"});
 	if(htmlHeight>winHeight){
 		winMask.height(htmlHeight);
