@@ -96,7 +96,7 @@
         {% for m_item, a_item in query_item %}
         <tr>
             <td>
-                <a href={{ m_item.href }}>{{ m_item.title }}</a><br />
+                <a href={{ m_item.href }} target="_blank">{{ m_item.title }}</a><br />
                 {{ m_item.href }}
                 <br />
                 4<input type="radio" name="m_rating_{{ m_item.id }}" value=4 {% if m_item.rating == 4 %} checked='checked' {% endif %} />
@@ -114,7 +114,8 @@
                     data-lessthan5="{{ m_item.lessthan5 }}"
                     data-note="{{ m_item.note }}"
                     data-query_item_id="{{ m_item.id }}"
-                    data-source="makepolo"
+                    data-source="online_makepolo"
+                    data-type=1
                     data-posturl="/testtask/set_bad_reason" 
                 >
                     选择原因
@@ -124,7 +125,7 @@
                 
             </td>
             <td>
-                <a href={{ a_item.href }}>{{ a_item.title }}</a><br />
+                <a href={{ a_item.href }} target="_blank">{{ a_item.title }}</a><br />
                 {{ a_item.href }}
                 <br />
                 4<input type="radio" name="a_rating_{{ a_item.id }}" value="4" {% if a_item.rating == 4 %} checked {% endif %} />
@@ -143,6 +144,7 @@
                     data-note="{{ a_item.note }}"
                     data-query_item_id="{{ a_item.id }}"
                     data-source="alibaba"
+                    data-type=1
                     data-posturl="/testtask/set_bad_reason" 
                 >
                     选择原因
@@ -158,13 +160,13 @@
         {% for m_item, a_item in query_item %}
         <tr>
             <td>
-                <a href={{ m_item.href }}>{{ m_item.title }}</a><br />
+                <a href={{ m_item.href }} target="_blank">{{ m_item.title }}</a><br />
                 {{ m_item.href }}
                 <br />
                 
             </td>
             <td>
-                <a href={{ a_item.href }}>{{ a_item.title }}</a><br />
+                <a href={{ a_item.href }} target="_blank">{{ a_item.title }}</a><br />
                 {{ a_item.href }}
                 <br />
             </td>
@@ -176,7 +178,7 @@
         {% for m_item in query_item %}
         <tr>
             <td>
-                <a href={{ m_item.href }}>{{ m_item.title }}</a><br />
+                <a href={{ m_item.href }} target="_blank" >{{ m_item.title }}</a><br />
                 {{ m_item.href }}
                 <br />
                 4<input type="radio" name="m_rating_{{ m_item.id }}" value=4 {% if m_item.rating == 4 %} checked='checked' {% endif %} />
@@ -194,7 +196,8 @@
                     data-lessthan5="{{ m_item.lessthan5 }}"
                     data-note="{{ m_item.note }}"
                     data-query_item_id="{{ m_item.id }}"
-                    data-source="makepolo"
+                    data-source="online_makepolo"
+                    data-type=2
                     data-posturl="/testtask/set_bad_reason" 
                 >
                     选择原因

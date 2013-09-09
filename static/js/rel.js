@@ -6,18 +6,28 @@ $(function(){
         var query_item_id  = $(this).data("query_item_id");
 
         var r_name = '', b_name = '', f_name = '';
-        if ($(this).data("source") == "makepolo")
-        {
-            r_name = 'm_rating_' + query_item_id;
-            b_name = 'm_business_' + query_item_id;
-            f_name = 'm_free_' + query_item_id;
-        }
+        if ($(this).data("type") == 1){
+            if ($(this).data("source") == "online_makepolo")
+            {
+                r_name = 'm_rating_' + query_item_id;
+                b_name = 'm_business_' + query_item_id;
+                f_name = 'm_free_' + query_item_id;
+            }
 
-        if ($(this).data("source") == "alibaba")
-        {
-            r_name = 'a_rating_' + query_item_id;
-            b_name = 'a_business_' + query_item_id;
-            f_name = 'a_free_' + query_item_id;
+            if ($(this).data("source") == "alibaba")
+            {
+                r_name = 'a_rating_' + query_item_id;
+                b_name = 'a_business_' + query_item_id;
+                f_name = 'a_free_' + query_item_id;
+            }
+        }
+        if ($(this).data("type") == 2){
+            if ($(this).data("source") == "online_makepolo")
+            {
+                r_name = 'm_rating_' + query_item_id;
+                b_name = 'm_business_' + query_item_id;
+                f_name = 'm_free_' + query_item_id;
+            }
         }
         var m_rating = $("input[name="+r_name+"]:checked");
         var m_business = $("input[name="+b_name+"]:checked");

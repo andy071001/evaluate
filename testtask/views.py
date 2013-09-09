@@ -304,6 +304,8 @@ class GetQueryWordHandler(ListView):
                     source = "alibaba",
                 )
                 print "*"*30
+                print "makepolo items:"
+                print makepolo_query_items
                 print alibaba_query_items
                 context['query_item'] = map(lambda *row: list(row) , makepolo_query_items, alibaba_query_items)
                 print "query_item:  "
@@ -374,7 +376,6 @@ class SetBadReasonHandler(View):
     def post(self, request):
         query_item_id = get_or_none(request.POST, 'query_item_id')
         note = get_or_none(request.POST, 'note')
-        source = get_or_none(request.POST, 'source')
         is_business = get_or_false(request.POST, 'business')
         is_free = get_or_false(request.POST, 'free')
         rating = get_or_none(request.POST, 'rating')
@@ -388,31 +389,38 @@ class SetBadReasonHandler(View):
         noimage = get_or_none(request.POST, 'noimage')
         lessthan5 = get_or_none(request.POST, 'lessthan5')
 
-        
-        query_item = QueryItem.objects.get(id=query_item_id)
+        if query_item_id: 
+            query_item = QueryItem.objects.get(id=query_item_id)
 
-        query_item.note = note
-        query_item.source = source
-        query_item.is_business = is_business
-        query_item.is_free = is_free
-        if rating:
-            query_item.rating = rating
+            if note:
+                query_item.note = note
+            if is_business:
+                query_item.is_business = is_business
+            if is_free:
+                query_item.is_free = is_free
+            if rating:
+                query_item.rating = rating
 
-        query_item.deadlink = deadlink
-        query_item.repeat = repeat
-        query_item.change = change
-        query_item.keyword = keyword
-        query_item.cutword = cutword
-        query_item.lowquality = lowquality
-        query_item.noimage = noimage
-        query_item.lessthan5 = lessthan5
+            query_item.deadlink = deadlink
+            query_item.repeat = repeat
+            query_item.change = change
+            query_item.keyword = keyword
+            query_item.cutword = cutword
+            query_item.lowquality = lowquality
+            query_item.noimage = noimage
+            query_item.lessthan5 = lessthan5
 
-        query_item.save()
-        data = {}
-        data['status'] = "success"
-        data["info"] = "更新成功"
+            query_item.save()
+            data = {}
+            data['status'] = "success"
+            data["info"] = "更新成功"
 
-        return HttpResponse(json.dumps(data), content_type="application/json")
+            return HttpResponse(json.dumps(data), content_type="application/json")
+        else:
+            data = {}
+            data['status'] = "failure"
+            data["info"] = "更新失败"
+            return HttpResponse(json.dumps(data), content_type="application/json")
 
 
 class GetQueryTaskHandler(ListView):
