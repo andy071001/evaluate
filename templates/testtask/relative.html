@@ -34,6 +34,13 @@
         </div>
         <div>
             <a href="/testtask/get_query_task">首页</a>
+            <div>
+                query:{{ query_word_name }}
+            </div>
+            <div>
+                任务类型：{{ type_name }}
+                数量：剩余{{ task_left_num }}条（共{{ task_total_num }}条）
+            </div>
         </div>
 
     <table width="100%" border=1px>
@@ -44,7 +51,11 @@
         </tr>
         {% for query_word in query_word_list %} 
             <tr>
+                {% if forloop.counter0 == query_word_seq %}
+                <td><a style="color:red" href="/testtask/get_query_word?page={{ page_obj.number }}&task_id={{ query_word.task.id }}&query_word_seq={{ forloop.counter0 }}" >{{ query_word.query_text }}</a></td>
+                {% else %}
                 <td><a href="/testtask/get_query_word?page={{ page_obj.number }}&task_id={{ query_word.task.id }}&query_word_seq={{ forloop.counter0 }}" >{{ query_word.query_text }}</a></td>
+                {% endif %}
             </tr>
         {% endfor %}
 
@@ -53,11 +64,11 @@
             <tr>
             <td>
             {% if page_obj.has_previous %}
-            <a href="/testtask/get_query_word?page={{ page_obj.previous_page_number }}" data-page="{{ page_obj.previous_page_number }}">上页</a>
+            <a href="/testtask/get_query_word?page={{ page_obj.previous_page_number }}&task_id={{ task_id }}" data-page="{{ page_obj.previous_page_number }}">上页</a>
             {% endif %}
                 {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
             {% if page_obj.has_next %}
-            <a href="/testtask/get_query_word?page={{ page_obj.next_page_number }}" data-page="{{ page_obj.next_page_number }}">下页</a>
+            <a href="/testtask/get_query_word?page={{ page_obj.next_page_number }}&task_id={{ task_id }}" data-page="{{ page_obj.next_page_number }}">下页</a>
             {% endif %}
             </td>
             </tr>
@@ -69,6 +80,7 @@
         <tr>
             <td>
                 {% csrf_token %}
+                <input type="hidden" name="task_id" value="{{ task_id }}">
                 <input type="text" name="search_word" value=""><br/ >
                 <input type="submit" value="Search" name="s-btn">
             </td>

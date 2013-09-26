@@ -287,8 +287,19 @@ class GetQueryWordHandler(ListView):
         except:
             query_word_seq = 0
 
+        #if self.query_word_text:
+        #    type = query_words
+        print "*" * 50
+        print "query_words: ", query_words
+        print "*" * 50
         type = query_words[query_word_seq].task.type
         context['type'] = type
+        context['query_word_name'] = query_words[query_word_seq].query_text
+        context['type_name'] = SHEET_NAME_DICT[type-1]
+        the_task = Task.objects.get(id=self.task_id)
+        context['task_total_num'] = the_task.number
+        context['task_left_num'] = the_task.number - the_task.complete
+        context['task_id'] = self.task_id
 
         makepolo_query_items = []
         alibaba_query_items = []
@@ -343,14 +354,14 @@ class GetQueryWordHandler(ListView):
             self.task_id = 1
 
         try:
-            query_word_text = self.request.GET['search_word']
+            self.query_word_text = self.request.GET['search_word']
         except:
-            query_word_text = None
+            self.query_word_text = None
         # self.task_id = 1
-        if query_word_text:
+        if self.query_word_text:
             query_words = QueryWord.objects.filter(
                 task__id=self.task_id,
-                query_text=query_word_text,
+                query_text=self.query_word_text,
             )
         else:
             query_words = QueryWord.objects.filter(
@@ -376,8 +387,8 @@ class SetBadReasonHandler(View):
     def post(self, request):
         query_item_id = get_or_none(request.POST, 'query_item_id')
         note = get_or_none(request.POST, 'note')
-        is_business = get_or_false(request.POST, 'business')
-        is_free = get_or_false(request.POST, 'free')
+        is_business = get_or_false(request.POST, 'is_business')
+        is_free = get_or_false(request.POST, 'is_free')
         rating = get_or_none(request.POST, 'rating')
 
         deadlink = get_or_none(request.POST, 'deadlink')
@@ -409,8 +420,37 @@ class SetBadReasonHandler(View):
             query_item.lowquality = lowquality
             query_item.noimage = noimage
             query_item.lessthan5 = lessthan5
+            query_item.is_complete = True
 
             query_item.save()
+
+            query_word_item = query_item.queryword
+            relate_query_task = query_word_item.task
+            relate_query_items = QueryItem.objects.filter(queryword=query_word_item)
+            counter = 0
+            total_item_num = len(relate_query_items)
+            for r_item in relate_query_items:
+                if r_item.is_complete:
+                    counter += 1
+
+            if total_item_num == counter:
+                query_word_item.is_complete = True
+
+            query_word_item.save()
+
+            relate_query_word_items = QueryWord.objects.filter(task=relate_query_task)
+            total_query_item_num = len(relate_query_word_items)
+
+            w_counter = 0
+            for r_q_item in relate_query_word_items:
+                if r_q_item.is_complete:
+                    w_counter += 1
+            relate_query_task.complete = w_counter
+            if w_counter == total_query_item_num:
+                relate_query_task.is_complete = True
+
+            relate_query_task.save()
+
             data = {}
             data['status'] = "success"
             data["info"] = "更新成功"
@@ -490,21 +530,21 @@ header_list = [rel_header, quality_header, strategy_header]
 def get_comment_string_for_xls(item):
     s = ""
     if item.deadlink == "checked":
-        s += "死链  "
+        s += u"死链  "
     if item.repeat == "checked":
-        s += "公司重复  "
+        s += u"公司重复  "
     if item.change == "checked":
-        s += "含义转变  "
+        s += u"含义转变  "
     if item.keyword == "checked":
-        s += "出现部分关键字  "
+        s += u"出现部分关键字  "
     if item.cutword == "checked":
-        s += "切词七零八落  "
+        s += u"切词七零八落  "
     if item.lowquality== "checked":
-        s += "低质量内容页  "
+        s += u"低质量内容页  "
     if item.noimage== "checked":
-        s += "无图片  "
+        s += u"无图片  "
     if item.lessthan5 == "checked":
-        s += "结果数少于5    "
+        s += u"结果数少于5    "
 
     if item.note:
         s += item.note

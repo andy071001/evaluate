@@ -44,7 +44,7 @@
             <td>{{ task.number }}</td>
             <td>{{ task.complete }}</td>
             <td>
-                {% if task.state %}
+                {% if task.is_complete %}
                 已完成
                 {% else %}
                 <p style="color:red">未完成</p>
